@@ -41,6 +41,7 @@ import {
 } from './components/ui/dropdown-menu.tsx'
 import { Icon, href as iconsHref } from './components/ui/icon.tsx'
 import { EpicToaster } from './components/ui/sonner.tsx'
+import axiformaStylesheetUrl from './styles/axiforma.css?url'
 import tailwindStyleSheetUrl from './styles/tailwind.css?url'
 import { getUserId, logout } from './utils/auth.server.ts'
 import { ClientHintCheck, getHints, useHints } from './utils/client-hints.tsx'
@@ -59,6 +60,7 @@ export const links: LinksFunction = () => {
 	return [
 		// Preload svg sprite as a resource to avoid render blocking
 		{ rel: 'preload', href: iconsHref, as: 'image' },
+		{ rel: 'preload', href: axiformaStylesheetUrl, as: 'style' },
 		// Preload CSS as a resource to avoid render blocking
 		{ rel: 'mask-icon', href: '/favicons/mask-icon.svg' },
 		{
@@ -74,6 +76,7 @@ export const links: LinksFunction = () => {
 		} as const, // necessary to make typescript happy
 		//These should match the css preloads above to avoid css as render blocking resource
 		{ rel: 'icon', type: 'image/svg+xml', href: '/favicons/favicon.svg' },
+		{ rel: 'stylesheet', href: axiformaStylesheetUrl },
 		{ rel: 'stylesheet', href: tailwindStyleSheetUrl },
 	].filter(Boolean)
 }
@@ -235,13 +238,10 @@ function App() {
 			env={data.ENV}
 		>
 			<div className="flex h-screen flex-col justify-between">
-				<header className="container py-6">
+				<header className="container sticky top-0 bg-background py-6">
 					<nav className="flex flex-wrap items-center justify-between gap-4 sm:flex-nowrap md:gap-8">
-						<Logo />
-						<div className="ml-auto hidden max-w-sm flex-1 sm:block">
-							{searchBar}
-						</div>
 						<div className="flex items-center gap-10">
+							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
 							{user ? (
 								<UserDropdown />
 							) : (
@@ -250,7 +250,6 @@ function App() {
 								</Button>
 							)}
 						</div>
-						<div className="block w-full sm:hidden">{searchBar}</div>
 					</nav>
 				</header>
 
@@ -258,27 +257,28 @@ function App() {
 					<Outlet />
 				</div>
 
-				<div className="container flex justify-between pb-5">
-					<Logo />
-					<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
+				<div className="container sticky bottom-0 flex justify-between bg-background py-5">
+					<button className="flex flex-col font-light">
+						<Icon name="home" size="md" />
+						Home
+					</button>
+					<button className="flex flex-col font-light">
+						<Icon name="feature-search" size="md" />
+						Categories
+					</button>
+					<button className="flex flex-col font-light">
+						<Icon name="restaurant" size="md" />
+						Meals
+					</button>
+					<button className="flex flex-col font-light">
+						<Icon name="dots-horizontal" size="md" />
+						More
+					</button>
 				</div>
 			</div>
 			<EpicToaster closeButton position="top-center" theme={theme} />
 			<EpicProgress />
 		</Document>
-	)
-}
-
-function Logo() {
-	return (
-		<Link to="/" className="group grid leading-snug">
-			<span className="font-light transition group-hover:-translate-x-1">
-				epic
-			</span>
-			<span className="font-bold transition group-hover:translate-x-1">
-				notes
-			</span>
-		</Link>
 	)
 }
 

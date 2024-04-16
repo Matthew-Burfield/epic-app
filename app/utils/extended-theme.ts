@@ -1,6 +1,10 @@
 import { type Config } from 'tailwindcss'
+import defaultTheme from 'tailwindcss/defaultTheme.js'
 
 export const extendedTheme = {
+	fontFamily: {
+		sans: ['var(--font-sans)', ...defaultTheme.fontFamily.sans],
+	},
 	colors: {
 		border: 'hsl(var(--border))',
 		input: {
