@@ -14,6 +14,7 @@ import {
 	Link,
 	Links,
 	Meta,
+	NavLink,
 	Outlet,
 	Scripts,
 	ScrollRestoration,
@@ -48,7 +49,12 @@ import { ClientHintCheck, getHints, useHints } from './utils/client-hints.tsx'
 import { prisma } from './utils/db.server.ts'
 import { getEnv } from './utils/env.server.ts'
 import { honeypot } from './utils/honeypot.server.ts'
-import { combineHeaders, getDomainUrl, getUserImgSrc } from './utils/misc.tsx'
+import {
+	cn,
+	combineHeaders,
+	getDomainUrl,
+	getUserImgSrc,
+} from './utils/misc.tsx'
 import { useNonce } from './utils/nonce-provider.ts'
 import { useRequestInfo } from './utils/request-info.ts'
 import { type Theme, setTheme, getTheme } from './utils/theme.server.ts'
@@ -240,15 +246,21 @@ function App() {
 			<div className="flex h-screen flex-col justify-between">
 				<header className="container sticky top-0 bg-background py-6">
 					<nav className="flex flex-wrap items-center justify-between gap-4 sm:flex-nowrap md:gap-8">
-						<div className="flex items-center gap-10">
+						<Icon name="arrow-left" size="lg">
+							<span className="sr-only">Back</span>
+						</Icon>
+						<div className="flex items-center gap-1">
+							<Icon name="search" size="lg">
+								<span className="sr-only">Search</span>
+							</Icon>
 							<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
-							{user ? (
-								<UserDropdown />
-							) : (
-								<Button asChild variant="default" size="lg">
-									<Link to="/login">Log In</Link>
-								</Button>
-							)}
+							{/* {user ? ( */}
+							{/* 	<UserDropdown /> */}
+							{/* ) : ( */}
+							{/* 	<Button asChild variant="default" size="lg"> */}
+							{/* 		<Link to="/login">Log In</Link> */}
+							{/* 	</Button> */}
+							{/* )} */}
 						</div>
 					</nav>
 				</header>
@@ -258,22 +270,54 @@ function App() {
 				</div>
 
 				<div className="container sticky bottom-0 flex justify-between bg-background py-5">
-					<button className="flex flex-col font-light">
+					<NavLink
+						to="."
+						className={({ isActive }) =>
+							cn(
+								'group flex flex-col fill-secondary font-light text-secondary hover:fill-accent hover:text-accent',
+								isActive && 'fill-accent text-accent',
+							)
+						}
+					>
 						<Icon name="home" size="md" />
 						Home
-					</button>
-					<button className="flex flex-col font-light">
+					</NavLink>
+					<NavLink
+						to="categories"
+						className={({ isActive }) =>
+							cn(
+								'group flex flex-col fill-secondary font-light text-secondary hover:fill-accent hover:text-accent',
+								isActive && 'fill-accent text-accent',
+							)
+						}
+					>
 						<Icon name="feature-search" size="md" />
 						Categories
-					</button>
-					<button className="flex flex-col font-light">
+					</NavLink>
+					<NavLink
+						to="meals"
+						className={({ isActive }) =>
+							cn(
+								'group flex flex-col fill-secondary font-light text-secondary hover:fill-accent hover:text-accent',
+								isActive && 'fill-accent text-accent',
+							)
+						}
+					>
 						<Icon name="restaurant" size="md" />
 						Meals
-					</button>
-					<button className="flex flex-col font-light">
+					</NavLink>
+					<NavLink
+						to="more"
+						className={({ isActive }) =>
+							cn(
+								'group flex flex-col fill-secondary font-light text-secondary hover:fill-accent hover:text-accent',
+								isActive && 'fill-accent text-accent',
+							)
+						}
+					>
 						<Icon name="dots-horizontal" size="md" />
 						More
-					</button>
+					</NavLink>
 				</div>
 			</div>
 			<EpicToaster closeButton position="top-center" theme={theme} />
@@ -401,17 +445,17 @@ function ThemeSwitch({ userPreference }: { userPreference?: Theme | null }) {
 		mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system'
 	const modeLabel = {
 		light: (
-			<Icon name="sun">
+			<Icon name="sun" size="lg">
 				<span className="sr-only">Light</span>
 			</Icon>
 		),
 		dark: (
-			<Icon name="moon">
+			<Icon name="moon" size="lg">
 				<span className="sr-only">Dark</span>
 			</Icon>
 		),
 		system: (
-			<Icon name="laptop">
+			<Icon name="laptop" size="lg">
 				<span className="sr-only">System</span>
 			</Icon>
 		),
