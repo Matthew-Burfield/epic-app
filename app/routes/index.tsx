@@ -1,24 +1,66 @@
-import { json, type MetaFunction } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { parseWithZod } from '@conform-to/zod'
+import {
+	type ActionFunctionArgs,
+	json,
+	type MetaFunction,
+} from '@remix-run/node'
+import { useFetcher, useLoaderData } from '@remix-run/react'
+import { useEffect, useRef } from 'react'
+import { z } from 'zod'
 
 export const meta: MetaFunction = () => [{ title: 'Grocery list' }]
 
+let id = 0
 function createListItem(name: string) {
-	return { userId: 1, name, checked: false }
+	id = id + 1
+	return { id, userId: 1, name, checked: false }
+}
+let list = [
+	createListItem('Apples'),
+	createListItem('Bananas'),
+	createListItem('Oranges'),
+]
+
+const ItemForm = z.object({ name: z.string().min(1) })
+
+export async function action({ request }: ActionFunctionArgs) {
+	// const userId = await requireUserId(request)
+	const formData = await request.formData()
+	const submission = parseWithZod(formData, { schema: ItemForm })
+
+	await new Promise(resolve => setTimeout(resolve, 1000))
+
+	if (submission.status !== 'success') {
+		return json({ result: submission.reply() }, { status: 400 })
+	}
+
+	const newItem = createListItem(submission.value.name)
+	list = [newItem, ...list]
+
+	return json({ item: newItem })
 }
 
 export async function loader() {
-	const list = [
-		createListItem('Apples'),
-		createListItem('Bananas'),
-		createListItem('Oranges'),
-	]
-
 	return json({ list })
 }
 
 export default function Index() {
-	const data = useLoaderData<typeof loader>()
+	const fetcher = useFetcher<typeof action>()
+	const list = useLoaderData<typeof loader>().list
+	const formRef = useRef<HTMLFormElement>(null)
+
+	const isSubmitting = fetcher.state !== 'idle' && !!fetcher.data
+	const newItem =
+		fetcher.state !== 'idle' && fetcher.data && 'item' in fetcher.data
+			? fetcher.data.item
+			: null
+
+	useEffect(() => {
+		if (isSubmitting) {
+			formRef.current?.reset()
+		}
+	}, [isSubmitting])
+
 	return (
 		<main className="font-poppins grid h-full">
 			<div className="grid px-4 xl:grid-cols-2 xl:gap-24">
@@ -29,7 +71,11 @@ export default function Index() {
 					>
 						Grocery list
 					</h1>
-					{data.list.length === 0 ? (
+					<fetcher.Form ref={formRef} method="post">
+						<input type="text" name="name" placeholder="Add an item" />
+						<button disabled={isSubmitting}>Add</button>
+					</fetcher.Form>
+					{list.length === 0 ? (
 						<div className="bg-secondary-foreground p-10 text-center">
 							<p className="pb-3 text-secondary">Your grocery list is empty</p>
 							<p className="text-secondary">
@@ -38,9 +84,16 @@ export default function Index() {
 						</div>
 					) : (
 						<div>
-							{data.list.map(item => (
+							{newItem ? (
 								<ListItem
-									key={item.name}
+									key={newItem.id}
+									name={newItem.name}
+									checked={newItem.checked}
+								/>
+							) : null}
+							{list.map(item => (
+								<ListItem
+									key={item.id}
 									name={item.name}
 									checked={item.checked}
 								/>
