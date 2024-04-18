@@ -26,9 +26,27 @@ const ItemForm = z.object({ name: z.string().min(1) })
 export async function action({ request }: ActionFunctionArgs) {
 	// const userId = await requireUserId(request)
 	const formData = await request.formData()
-	const submission = parseWithZod(formData, { schema: ItemForm })
+	const action = formData.get('_action')
 
-	await new Promise(resolve => setTimeout(resolve, 1000))
+	if (action === 'delete') {
+		const item = list.find(item => item.id === Number(formData.get('id')))
+		if (!item) {
+			return json({ result: 'Item not found' }, { status: 404 })
+		}
+		item.checked = true
+		return json({ item })
+	}
+
+	if (action === 'undo') {
+		const item = list.find(item => item.id === Number(formData.get('id')))
+		if (!item) {
+			return json({ result: 'Item not found' }, { status: 404 })
+		}
+		item.checked = false
+		return json({ item })
+	}
+
+	const submission = parseWithZod(formData, { schema: ItemForm })
 
 	if (submission.status !== 'success') {
 		return json({ result: submission.reply() }, { status: 400 })
@@ -72,8 +90,12 @@ export default function Index() {
 						Grocery list
 					</h1>
 					<fetcher.Form ref={formRef} method="post">
-						<input type="text" name="name" placeholder="Add an item" />
-						<button disabled={isSubmitting}>Add</button>
+						<li
+							className={`flex items-center justify-between border-b border-accent p-3`}
+						>
+							<input type="text" name="name" placeholder="Add an item" />
+							<button disabled={isSubmitting}>Add</button>
+						</li>
 					</fetcher.Form>
 					{list.length === 0 ? (
 						<div className="bg-secondary-foreground p-10 text-center">
@@ -87,6 +109,7 @@ export default function Index() {
 							{newItem ? (
 								<ListItem
 									key={newItem.id}
+									id={newItem.id}
 									name={newItem.name}
 									checked={newItem.checked}
 								/>
@@ -94,6 +117,7 @@ export default function Index() {
 							{list.map(item => (
 								<ListItem
 									key={item.id}
+									id={item.id}
 									name={item.name}
 									checked={item.checked}
 								/>
@@ -106,11 +130,33 @@ export default function Index() {
 	)
 }
 
-function ListItem({ name, checked }: { name: string; checked: boolean }) {
+function ListItem({
+	id,
+	name,
+	checked,
+}: {
+	id: number
+	name: string
+	checked: boolean
+}) {
+	const fetcher = useFetcher()
 	return (
-		<li className="flex items-center justify-between border-b border-accent p-3">
-			<span>{name}</span>
-			<input type="checkbox" />
-		</li>
+		<fetcher.Form method="post">
+			<input type="hidden" name="id" value={id} />
+			<li
+				className={`flex items-center justify-between border-b border-accent p-3`}
+			>
+				<span className={`${checked ? 'line-through' : ''}`}>{name}</span>
+				{checked ? (
+					<button type="submit" name="_action" value="undo">
+						undo
+					</button>
+				) : (
+					<button type="submit" name="_action" value="delete">
+						X
+					</button>
+				)}
+			</li>
+		</fetcher.Form>
 	)
 }
