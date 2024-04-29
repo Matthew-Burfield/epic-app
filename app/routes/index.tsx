@@ -70,8 +70,6 @@ export default function Index() {
 	const groceryList = useLoaderData<typeof loader>()
 	const formRef = useRef<HTMLFormElement>(null)
 
-	console.log({ groceryList })
-
 	const isSubmitting = fetcher.state !== 'idle' && !!fetcher.data
 
 	useEffect(() => {
@@ -79,6 +77,13 @@ export default function Index() {
 			formRef.current?.reset()
 		}
 	}, [isSubmitting])
+
+	const sortedGroceryList = groceryList.sort((a, b) => {
+		const checkedSort = a.checked === b.checked ? 0 : a.checked ? 1 : -1
+		const nameSort = a.name.localeCompare(b.name)
+
+		return checkedSort || nameSort
+	})
 
 	return (
 		<main className="font-poppins grid h-full">
@@ -100,7 +105,7 @@ export default function Index() {
 							</button>
 						</li>
 					</fetcher.Form>
-					{groceryList.length === 0 ? (
+					{sortedGroceryList.length === 0 ? (
 						<div className="bg-secondary-foreground p-10 text-center">
 							<p className="pb-3 text-secondary">Your grocery list is empty</p>
 							<p className="text-secondary">
@@ -109,7 +114,7 @@ export default function Index() {
 						</div>
 					) : (
 						<div>
-							{groceryList.map(item => (
+							{sortedGroceryList.map(item => (
 								<ListItem
 									key={item.id}
 									id={item.id}
