@@ -73,10 +73,6 @@ export default function Index() {
 	console.log({ groceryList })
 
 	const isSubmitting = fetcher.state !== 'idle' && !!fetcher.data
-	const newItem =
-		fetcher.state !== 'idle' && fetcher.data && 'item' in fetcher.data
-			? fetcher.data.item
-			: null
 
 	useEffect(() => {
 		if (isSubmitting) {
@@ -113,14 +109,6 @@ export default function Index() {
 						</div>
 					) : (
 						<div>
-							{newItem ? (
-								<ListItem
-									key={newItem.id}
-									id={newItem.id}
-									name={newItem.name}
-									checked={newItem.checked}
-								/>
-							) : null}
 							{groceryList.map(item => (
 								<ListItem
 									key={item.id}
