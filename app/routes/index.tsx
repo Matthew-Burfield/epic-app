@@ -1,49 +1,39 @@
 import { parseWithZod } from '@conform-to/zod'
 import {
-	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
 	json,
+	type ActionFunctionArgs,
 	type MetaFunction,
 } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
+import { requireUserId } from '#app/utils/auth.server.js'
+import { prisma } from '#app/utils/db.server.js'
 
 export const meta: MetaFunction = () => [{ title: 'Grocery list' }]
-
-let id = 0
-function createListItem(name: string) {
-	id = id + 1
-	return { id, userId: 1, name, checked: false }
-}
-let list = [
-	createListItem('Apples'),
-	createListItem('Bananas'),
-	createListItem('Oranges'),
-]
 
 const ItemForm = z.object({ name: z.string().min(1) })
 
 export async function action({ request }: ActionFunctionArgs) {
-	// const userId = await requireUserId(request)
+	const userId = await requireUserId(request)
 	const formData = await request.formData()
 	const action = formData.get('_action')
 
 	if (action === 'delete') {
-		const item = list.find(item => item.id === Number(formData.get('id')))
-		if (!item) {
-			return json({ result: 'Item not found' }, { status: 404 })
-		}
-		item.checked = true
-		return json({ item })
+		const deletedItem = await prisma.listItem.update({
+			where: { id: formData.get('id') },
+			data: { checked: true },
+		})
+		return json({ item: deletedItem })
 	}
 
 	if (action === 'undo') {
-		const item = list.find(item => item.id === Number(formData.get('id')))
-		if (!item) {
-			return json({ result: 'Item not found' }, { status: 404 })
-		}
-		item.checked = false
-		return json({ item })
+		const undoItem = await prisma.listItem.update({
+			where: { id: formData.get('id') },
+			data: { checked: false },
+		})
+		return json({ item: undoItem })
 	}
 
 	const submission = parseWithZod(formData, { schema: ItemForm })
@@ -52,20 +42,35 @@ export async function action({ request }: ActionFunctionArgs) {
 		return json({ result: submission.reply() }, { status: 400 })
 	}
 
-	const newItem = createListItem(submission.value.name)
-	list = [newItem, ...list]
-
-	return json({ item: newItem })
+	if (action === 'add') {
+		const newItem = await prisma.listItem.create({
+			data: {
+				ownerId: userId,
+				name: submission.value.name,
+				checked: false,
+			},
+		})
+		console.log({ newItem })
+		return json({ item: newItem })
+	}
 }
 
-export async function loader() {
-	return json({ list })
+export async function loader({ request }: LoaderFunctionArgs) {
+	const userId = await requireUserId(request)
+	const groceryList = await prisma.listItem.findMany({
+		select: { id: true, name: true, checked: true },
+		where: { ownerId: userId },
+	})
+
+	return json(groceryList)
 }
 
 export default function Index() {
 	const fetcher = useFetcher<typeof action>()
-	const list = useLoaderData<typeof loader>().list
+	const groceryList = useLoaderData<typeof loader>()
 	const formRef = useRef<HTMLFormElement>(null)
+
+	console.log({ groceryList })
 
 	const isSubmitting = fetcher.state !== 'idle' && !!fetcher.data
 	const newItem =
@@ -94,10 +99,12 @@ export default function Index() {
 							className={`flex items-center justify-between border-b border-accent p-3`}
 						>
 							<input type="text" name="name" placeholder="Add an item" />
-							<button disabled={isSubmitting}>Add</button>
+							<button name="_action" value="add" disabled={isSubmitting}>
+								Add
+							</button>
 						</li>
 					</fetcher.Form>
-					{list.length === 0 ? (
+					{groceryList.length === 0 ? (
 						<div className="bg-secondary-foreground p-10 text-center">
 							<p className="pb-3 text-secondary">Your grocery list is empty</p>
 							<p className="text-secondary">
@@ -114,7 +121,7 @@ export default function Index() {
 									checked={newItem.checked}
 								/>
 							) : null}
-							{list.map(item => (
+							{groceryList.map(item => (
 								<ListItem
 									key={item.id}
 									id={item.id}
@@ -135,7 +142,7 @@ function ListItem({
 	name,
 	checked,
 }: {
-	id: number
+	id: string
 	name: string
 	checked: boolean
 }) {
