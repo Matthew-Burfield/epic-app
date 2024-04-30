@@ -22,7 +22,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	if (action === 'delete') {
 		const deletedItem = await prisma.listItem.update({
-			where: { id: formData.get('id') },
+			where: { id: String(formData.get('id')) },
 			data: { checked: true },
 		})
 		return json({ item: deletedItem })
@@ -30,7 +30,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	if (action === 'undo') {
 		const undoItem = await prisma.listItem.update({
-			where: { id: formData.get('id') },
+			where: { id: String(formData.get('id')) },
 			data: { checked: false },
 		})
 		return json({ item: undoItem })
