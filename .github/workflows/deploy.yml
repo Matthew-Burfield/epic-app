@@ -104,8 +104,8 @@ jobs:
         run: |
           git checkout HEAD^
           echo "eslint-ignore-count=$(cat other/metrics/eslint-ignore-count.txt)" >> $GITHUB_OUTPUT
-          # echo "::set-output name=no-explicity-any-count::$(cat other/metrics/ignore-any-count.txt)"
-          # echo "::set-output name=any-count::$(cat other/metrics/any-count.txt)"
+          echo "no-explicity-any-count=$(cat other/metrics/no-explicit-any-count.txt)" >> $GITHUB_OUTPUT
+          echo "any-count=$(cat other/metrics/any-count.txt)" >> $GITHUB_OUTPUT
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -113,15 +113,15 @@ jobs:
       - name: Count new metrics
         id: new
         run: |
-          eslint_ignore_count=$(grep -r "eslint-disable" . | wc -l)
-          # no_explicit_any_count=$(grep -r "eslint-disable" . | wc -l)
-          # any_count=$(grep -r "eslint-disable" . | wc -l)
+          eslint_ignore_count=$(grep -r "eslint-disable" app | wc -l)
+          no_explicit_any_count=$(grep -r "@typescript-eslint/no-explicit-any" app | wc -l)
+          any_count=$(grep -r ": any" app | wc -l)
           echo "eslint-ignore-count=$eslint_ignore_count" >> $GITHUB_OUTPUT
-          # echo "::set-output name=no-explicity-any-count::$no_explicit_any_count"
-          # echo "::set-output name=any-count::$any_count"
+          echo "no-explicity-any-count=$no_explicit_any_count" >> $GITHUB_OUTPUT
+          echo "any-count=$any_count" >> $GITHUB_OUTPUT
           echo $eslint_ignore_count > other/metrics/eslint-ignore-count.txt
-          # echo $no_explicit_any_count > other/metrics/no-explicit-any-count.txt
-          # echo $any_count > other/metrics/any-count.txt (
+          echo $no_explicit_any_count > other/metrics/no-explicit-any-count.txt
+          echo $any_count > other/metrics/any-count.txt
 
       - name: Calculate percentage change
         run: |
@@ -129,50 +129,50 @@ jobs:
           new=${{ steps.new.outputs.eslint-ignore-count }}
           change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
           echo "Percentage change in eslint ignore comments: $change%"
-          # old=${{ steps.old.outputs.no-explicity-any-count }}
-          # new=${{ steps.new.outputs.no-explicity-any-count }}
-          # change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
-          # echo "Percentage change in no-explicit-any comments: $change%"
-          # old=${{ steps.old.outputs.any-count }}
-          # new=${{ steps.new.outputs.any-count }}
-          # change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
-          # echo "Percentage change in :any types: $change%"
+          old=${{ steps.old.outputs.no-explicity-any-count }}
+          new=${{ steps.new.outputs.no-explicity-any-count }}
+          change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
+          echo "Percentage change in no-explicit-any comments: $change%"
+          old=${{ steps.old.outputs.any-count }}
+          new=${{ steps.new.outputs.any-count }}
+          change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
+          echo "Percentage change in :any types: $change%"
 
-  # playwright:
-  #   name: 🎭 Playwright
-  #   runs-on: ubuntu-22.04
-  #   timeout-minutes: 60
-  #   steps:
-  #     - name: ⬇️ Checkout repo
-  #       uses: actions/checkout@v4
-  #
-  #     - name: 📦 Setup pnpm
-  #       uses: pnpm/action-setup@v3
-  #
-  #     - name: 🏄 Copy test env vars
-  #       run: cp .env.example .env
-  #
-  #     - name: ⎔ Setup node
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 20
-  #
-  #     - name: 📥 Download deps
-  #       run: pnpm install
-  #
-  #     - name: 📥 Install Playwright Browsers
-  #       run: pnpm run test:e2e:install
-  #
-  #     - name: 🛠 Setup Database
-  #       run: npx prisma migrate deploy
-  #
-  #     - name: 🏦 Cache Database
-  #       id: db-cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: prisma/data.db
-  #         key:
-  #           db-cache-schema_${{ hashFiles('./prisma/schema.prisma')
+        # playwright:
+        #   name: 🎭 Playwright
+        #   runs-on: ubuntu-22.04
+        #   timeout-minutes: 60
+        #   steps:
+        #     - name: ⬇️ Checkout repo
+        #       uses: actions/checkout@v4
+        #
+        #     - name: 📦 Setup pnpm
+        #       uses: pnpm/action-setup@v3
+        #
+        #     - name: 🏄 Copy test env vars
+        #       run: cp .env.example .env
+        #
+        #     - name: ⎔ Setup node
+        #       uses: actions/setup-node@v4
+        #       with:
+        #         node-version: 20
+        #
+        #     - name: 📥 Download deps
+        #       run: pnpm install
+        #
+        #     - name: 📥 Install Playwright Browsers
+        #       run: pnpm run test:e2e:install
+        #
+        #     - name: 🛠 Setup Database
+        #       run: npx prisma migrate deploy
+        #
+        #     - name: 🏦 Cache Database
+        #       id: db-cache
+        #       uses: actions/cache@v4
+        #       with:
+        #         path: prisma/data.db
+        #         key:
+        #           db-cache-schema_${{ hashFiles('./prisma/schema.prisma')
   #           }}-migrations_${{ hashFiles('./prisma/migrations/*/migration.sql')
   #           }}
   #
