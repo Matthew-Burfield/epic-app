@@ -103,6 +103,7 @@ jobs:
         id: old
         run: |
           git checkout HEAD^
+          ls other
           echo "eslint-ignore-count=$(cat other/metrics/eslint-ignore-count.txt) >> $GITHUB_OUTPUT"
           # echo "::set-output name=no-explicity-any-count::$(cat other/metrics/ignore-any-count.txt)"
           # echo "::set-output name=any-count::$(cat other/metrics/any-count.txt)"
@@ -121,7 +122,7 @@ jobs:
           # echo "::set-output name=any-count::$any_count"
           echo $eslint_ignore_count > other/metrics/eslint-ignore-count.txt
           # echo $no_explicit_any_count > other/metrics/no-explicit-any-count.txt
-          # echo $any_count > other/metrics/any-count.txt
+          # echo $any_count > other/metrics/any-count.txt (
 
       - name: Calculate percentage change
         run: |
