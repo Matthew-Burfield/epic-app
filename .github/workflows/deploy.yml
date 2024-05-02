@@ -138,6 +138,32 @@ jobs:
           change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
           echo "Percentage change in :any types: $change%"
 
+  annotate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create check run
+        id: create_check
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/check-runs
+          mediaType: '{"previews": ["antiope"]}'
+          name: My check
+          head_sha: ${{ github.event.pull_request.head.sha }}
+          status: completed
+          conclusion: success
+          output:
+            '{"title":"My check","summary":"Summary of the
+            check","annotations":[{"path":"README.md","start_line":1,"end_line":1,"start_column":1,"end_column":1,"annotation_level":"notice","message":"My
+            annotation"}]}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get check run id
+        run: echo "Check run id is ${{ steps.create_check.outputs.data.id }}"
+
         # playwright:
         #   name: 🎭 Playwright
         #   runs-on: ubuntu-22.04
