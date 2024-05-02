@@ -128,7 +128,7 @@ jobs:
           old=${{ steps.old.outputs.eslint-ignore-count }}
           new=${{ steps.new.outputs.eslint-ignore-count }}
           change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
-          echo "Percentage change in eslint ignore comments: $change%"
+          echo "Percentage change in eslint ignoree comments: $change%"
           old=${{ steps.old.outputs.no-explicity-any-count }}
           new=${{ steps.new.outputs.no-explicity-any-count }}
           change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
