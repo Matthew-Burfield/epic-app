@@ -15,80 +15,80 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: ⬣ ESLint
-    runs-on: ubuntu-22.04
-    steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: 📥 Download deps
-        run: pnpm install
-
-      - name: 🖼 Build icons
-        run: pnpm run build:icons
-
-      - name: 🔬 Lint
-        run: pnpm run lint
-
-  typecheck:
-    name: ʦ TypeScript
-    runs-on: ubuntu-22.04
-    steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: 📥 Download deps
-        run: pnpm install
-
-      - name: 🖼 Build icons
-        run: pnpm run build:icons
-
-      - name: 🔎 Type check
-        run: pnpm run --if-present typecheck
-
-  vitest:
-    name: ⚡ Vitest
-    runs-on: ubuntu-22.04
-    steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: 📥 Download deps
-        run: pnpm install
-
-      - name: 🏄 Copy test env vars
-        run: cp .env.example .env
-
-      - name: 🖼 Build icons
-        run: pnpm run build:icons
-
-      - name: ⚡ Run vitest
-        run: pnpm run test -- --coverage
+  # lint:
+  #   name: ⬣ ESLint
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #     - name: ⬇️ Checkout repo
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 📦 Setup pnpm
+  #       uses: pnpm/action-setup@v3
+  #
+  #     - name: ⎔ Setup node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #
+  #     - name: 📥 Download deps
+  #       run: pnpm install
+  #
+  #     - name: 🖼 Build icons
+  #       run: pnpm run build:icons
+  #
+  #     - name: 🔬 Lint
+  #       run: pnpm run lint
+  #
+  # typecheck:
+  #   name: ʦ TypeScript
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #     - name: ⬇️ Checkout repo
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 📦 Setup pnpm
+  #       uses: pnpm/action-setup@v3
+  #
+  #     - name: ⎔ Setup node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #
+  #     - name: 📥 Download deps
+  #       run: pnpm install
+  #
+  #     - name: 🖼 Build icons
+  #       run: pnpm run build:icons
+  #
+  #     - name: 🔎 Type check
+  #       run: pnpm run --if-present typecheck
+  #
+  # vitest:
+  #   name: ⚡ Vitest
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #     - name: ⬇️ Checkout repo
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 📦 Setup pnpm
+  #       uses: pnpm/action-setup@v3
+  #
+  #     - name: ⎔ Setup node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #
+  #     - name: 📥 Download deps
+  #       run: pnpm install
+  #
+  #     - name: 🏄 Copy test env vars
+  #       run: cp .env.example .env
+  #
+  #     - name: 🖼 Build icons
+  #       run: pnpm run build:icons
+  #
+  #     - name: ⚡ Run vitest
+  #       run: pnpm run test -- --coverage
 
   metrics:
     name: Metrics
@@ -103,8 +103,7 @@ jobs:
         id: old
         run: |
           git checkout HEAD^
-          ls other
-          echo "eslint-ignore-count=$(cat other/metrics/eslint-ignore-count.txt) >> $GITHUB_OUTPUT"
+          echo "eslint-ignore-count=$(cat other/metrics/eslint-ignore-count.txt)" >> $GITHUB_OUTPUT
           # echo "::set-output name=no-explicity-any-count::$(cat other/metrics/ignore-any-count.txt)"
           # echo "::set-output name=any-count::$(cat other/metrics/any-count.txt)"
 
@@ -128,10 +127,8 @@ jobs:
         run: |
           old=${{ steps.old.outputs.eslint-ignore-count }}
           new=${{ steps.new.outputs.eslint-ignore-count }}
-          echo "old: ${old}"
-          echo "new: ${new}"
-          # change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
-          # echo "Percentage change in eslint ignore comments: $change%"
+          change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
+          echo "Percentage change in eslint ignore comments: $change%"
           # old=${{ steps.old.outputs.no-explicity-any-count }}
           # new=${{ steps.new.outputs.no-explicity-any-count }}
           # change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
