@@ -103,8 +103,7 @@ jobs:
         id: old
         run: |
           git checkout HEAD^
-          echo "eslint-ignore-count=10" >> $GITHUB_OUTPUT
-          # echo "eslint-ignore-count=$(cat other/metrics/eslint-ignore-count.txt) >> $GITHUB_OUTPUT"
+          echo "eslint-ignore-count=$(cat other/metrics/eslint-ignore-count.txt) >> $GITHUB_OUTPUT"
           # echo "::set-output name=no-explicity-any-count::$(cat other/metrics/ignore-any-count.txt)"
           # echo "::set-output name=any-count::$(cat other/metrics/any-count.txt)"
 
