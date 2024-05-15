@@ -19,17 +19,22 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  image       UserImage?
-  password    Password?
-  notes       Note[]
-  groceryList ListItem[]
-  roles       Role[]
-  sessions    Session[]
-  connections Connection[]
+  image        UserImage?
+  password     Password?
+  roles        Role[]
+  sessions     Session[]
+  connections  Connection[]
+  List         List[]
+  ListItem     ListItem[]
+  Meal         Meal[]
+  MealItem     MealItem[]
+  FrequentItem FrequentItem[]
+  Item         Item[]
+  Note         Note[]
 }
 
-model ListItem {
-  id     String @id @default(cuid())
+model List {
+  id String @id @default(cuid())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -37,8 +42,101 @@ model ListItem {
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId String
 
-  name   String
+  name     String
+  ListItem ListItem[]
+}
+
+model ListItem {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String
+
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listId String
+
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId String
+
   checked Boolean
+}
+
+model Meal {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String
+
+  name     String
+  MealItem MealItem[]
+}
+
+model MealItem {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String
+
+  meal   Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  mealId String
+
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId String
+
+  quantity String
+}
+
+model FrequentItem {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String
+
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId String
+
+  quantity String
+}
+
+model Item {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String
+
+  name String
+
+  category     Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  categoryId   String
+  ListItem     ListItem[]
+  MealItem     MealItem[]
+  FrequentItem FrequentItem[]
+}
+
+model Category {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+  sort Int
+  Item Item[]
 }
 
 model Note {

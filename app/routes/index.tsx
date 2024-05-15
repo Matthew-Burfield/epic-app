@@ -16,7 +16,7 @@ export const meta: MetaFunction = () => [{ title: 'Grocery list' }]
 const ItemForm = z.object({ name: z.string().min(1) })
 
 export async function action({ request }: ActionFunctionArgs) {
-	const userId = await requireUserId(request)
+	// const userId = await requireUserId(request)
 	const formData = await request.formData()
 	const action = formData.get('_action')
 
@@ -43,31 +43,45 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 
 	if (action === 'add') {
-		const newItem = await prisma.listItem.create({
-			data: {
-				ownerId: userId,
-				name: submission.value.name,
-				checked: false,
-			},
-		})
-		console.log({ newItem })
-		return json({ item: newItem })
+		// const newItem = await prisma.listItem.create({
+		// 	data: {
+		// 		ownerId: userId,
+		// name: submission.value.name,
+		// 		checked: false,
+		// 	},
+		// })
+		// console.log({ newItem })
+		// return json({ item: newItem })
+		return null
 	}
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
-	const groceryList = await prisma.listItem.findMany({
-		select: { id: true, name: true, checked: true },
+	const items = await prisma.listItem.findMany({
 		where: { ownerId: userId },
+		select: {
+			id: true,
+			checked: true,
+			item: {
+				select: {
+					name: true,
+					category: {
+						select: {
+							name: true,
+						},
+					},
+				},
+			},
+		},
 	})
 
-	return json(groceryList)
+	return json({ items })
 }
 
 export default function Index() {
 	const fetcher = useFetcher<typeof action>()
-	const groceryList = useLoaderData<typeof loader>()
+	const { items } = useLoaderData<typeof loader>()
 	const formRef = useRef<HTMLFormElement>(null)
 
 	const isSubmitting = fetcher.state !== 'idle' && !!fetcher.data
@@ -78,9 +92,9 @@ export default function Index() {
 		}
 	}, [isSubmitting])
 
-	const sortedGroceryList = groceryList.sort((a, b) => {
+	const sortedGroceryList = items.sort((a, b) => {
 		const checkedSort = a.checked === b.checked ? 0 : a.checked ? 1 : -1
-		const nameSort = a.name.localeCompare(b.name)
+		const nameSort = a.item.name.localeCompare(b.item.name)
 
 		return checkedSort || nameSort
 	})
@@ -118,7 +132,7 @@ export default function Index() {
 								<ListItem
 									key={item.id}
 									id={item.id}
-									name={item.name}
+									name={item.item.name}
 									checked={item.checked}
 								/>
 							))}
