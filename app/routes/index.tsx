@@ -58,30 +58,57 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await requireUserId(request)
-	const items = await prisma.listItem.findMany({
-		where: { ownerId: userId },
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
 		select: {
-			id: true,
-			checked: true,
-			item: {
+			Meal: {
 				select: {
+					id: true,
 					name: true,
-					category: {
-						select: {
-							name: true,
-						},
-					},
+				},
+			},
+			MealItem: {
+				select: {
+					id: true,
+					mealId: true,
+					name: true,
+					categoryId: true,
+					quantity: true,
+					checked: true,
+				},
+			},
+			ListItem: {
+				select: {
+					id: true,
+					name: true,
+					categoryId: true,
+					quantity: true,
+					checked: true,
 				},
 			},
 		},
 	})
+	const categories = await prisma.category.findMany({
+		select: {
+			id: true,
+			name: true,
+			sort: true,
+			Item: {
+				select: {
+					id: true,
+					name: true,
+				},
+			},
+		},
+		orderBy: { sort: 'asc' },
+	})
 
-	return json({ items })
+	return json({ user, categories })
 }
 
 export default function Index() {
 	const fetcher = useFetcher<typeof action>()
-	const { items } = useLoaderData<typeof loader>()
+	const { user, categories } = useLoaderData<typeof loader>()
 	const formRef = useRef<HTMLFormElement>(null)
 
 	const isSubmitting = fetcher.state !== 'idle' && !!fetcher.data
@@ -92,12 +119,30 @@ export default function Index() {
 		}
 	}, [isSubmitting])
 
-	const sortedGroceryList = items.sort((a, b) => {
-		const checkedSort = a.checked === b.checked ? 0 : a.checked ? 1 : -1
-		const nameSort = a.item.name.localeCompare(b.item.name)
+	if (!user) {
+		return null
+	}
 
-		return checkedSort || nameSort
-	})
+	type Item = (typeof user.MealItem)[number] | (typeof user.ListItem)[number]
+	const sortedGroceryList = [...user.MealItem, ...user.ListItem].sort(
+		(a, b) => {
+			const checkedSort = a.checked === b.checked ? 0 : a.checked ? 1 : -1
+			const nameSort = a.name.localeCompare(b.name)
+
+			return checkedSort || nameSort
+		},
+	)
+
+	const mappedGroceryList = sortedGroceryList.reduce(
+		(acc, item) => {
+			if (!acc[item.categoryId]) {
+				acc[item.categoryId] = []
+			}
+			acc[item.categoryId].push(item)
+			return acc
+		},
+		{} as Record<string, Item[]>,
+	)
 
 	return (
 		<main className="font-poppins grid h-full">
@@ -128,19 +173,39 @@ export default function Index() {
 						</div>
 					) : (
 						<div>
-							{sortedGroceryList.map(item => (
-								<ListItem
-									key={item.id}
-									id={item.id}
-									name={item.item.name}
-									checked={item.checked}
-								/>
-							))}
+							{categories.map(category => {
+								const items = mappedGroceryList[category.id]
+								return (
+									<>
+										<CategoryTitle key={category.id} name={category.name} />
+										{items.map(item => (
+											<Item
+												key={item.id}
+												name={item.name}
+												quantity={item.quantity}
+											/>
+										))}
+									</>
+								)
+							})}
 						</div>
 					)}
 				</div>
 			</div>
 		</main>
+	)
+}
+
+function CategoryTitle({ name }: { name: string }) {
+	return <h2>{name}</h2>
+}
+
+function Item({ name, quantity }: { name: string; quantity: string }) {
+	return (
+		<div>
+			<div>{name}</div>
+			<div>{quantity}</div>
+		</div>
 	)
 }
 
