@@ -55,37 +55,6 @@ async function seed() {
 	})
 	console.timeEnd('👑 Created roles...')
 
-	console.time('🗃️ Created categories...')
-	await prisma.category.create({
-		data: {
-			id: '1',
-			name: 'Fruit & Vegetables',
-			sort: 1,
-		},
-	})
-	await prisma.category.create({
-		data: {
-			id: '2',
-			name: 'Meat & Fish',
-			sort: 2,
-		},
-	})
-	await prisma.category.create({
-		data: {
-			id: '3',
-			name: 'Dairy',
-			sort: 3,
-		},
-	})
-	await prisma.category.create({
-		data: {
-			id: '4',
-			name: 'Bread & Cereals',
-			sort: 4,
-		},
-	})
-	console.timeEnd('🗃️ Created categories...')
-
 	const totalUsers = 5
 	console.time(`👤 Created ${totalUsers} users...`)
 	// const noteImages = await getNoteImages()
@@ -163,7 +132,7 @@ async function seed() {
 
 	const githubUser = await insertGitHubUser('MOCK_CODE_GITHUB_KODY')
 
-	await prisma.user.create({
+	const kodyUser = await prisma.user.create({
 		select: { id: true },
 		data: {
 			email: 'kody@kcd.dev',
@@ -175,33 +144,6 @@ async function seed() {
 				create: { providerName: 'github', providerId: githubUser.profile.id },
 			},
 			roles: { connect: [{ name: 'admin' }, { name: 'user' }] },
-			Item: {
-				create: [
-					{
-						id: '414f0c09',
-						name: 'Apple',
-						categoryId: '1',
-					},
-				],
-			},
-			List: {
-				create: [
-					{
-						id: 'd27a197e',
-						name: '2024/05/15 19:37:00',
-					},
-				],
-			},
-			ListItem: {
-				create: [
-					{
-						id: '174230',
-						listId: 'd27a197e',
-						itemId: '414f0c09',
-						checked: false,
-					},
-				],
-			},
 			// notes: {
 			// 	create: [
 			// 		{
@@ -304,6 +246,197 @@ async function seed() {
 		},
 	})
 	console.timeEnd(`🐨 Created admin user "kody"`)
+
+	console.time('Created categories')
+	await prisma.category.create({
+		data: {
+			id: '1',
+			name: 'Fruit & Vegetables',
+			sort: 1,
+		},
+	})
+	await prisma.category.create({
+		data: {
+			id: '2',
+			name: 'Meat & Fish',
+			sort: 2,
+		},
+	})
+	await prisma.category.create({
+		data: {
+			id: '3',
+			name: 'Dairy',
+			sort: 3,
+		},
+	})
+	await prisma.category.create({
+		data: {
+			id: '4',
+			name: 'Bread & Cereals',
+			sort: 4,
+		},
+	})
+	await prisma.category.create({
+		data: {
+			id: '5',
+			name: 'Cans, Jars and Sauces',
+			sort: 5,
+		},
+	})
+	await prisma.category.create({
+		data: {
+			id: '6',
+			name: 'Other',
+			sort: 6,
+		},
+	})
+	console.timeEnd('Created categories')
+
+	console.time('Created items')
+	await prisma.item.create({
+		data: {
+			id: '1',
+			name: 'Mince',
+			categoryId: '2',
+			ownerId: kodyUser.id,
+		},
+	})
+	await prisma.item.create({
+		data: {
+			id: '2',
+			name: 'Pizza base',
+			categoryId: '4',
+			ownerId: kodyUser.id,
+		},
+	})
+	await prisma.item.create({
+		data: {
+			id: '3',
+			name: 'Capsicum',
+			categoryId: '1',
+			ownerId: kodyUser.id,
+		},
+	})
+	await prisma.item.create({
+		data: {
+			id: '4',
+			name: 'Zucchini',
+			categoryId: '1',
+			ownerId: kodyUser.id,
+		},
+	})
+	await prisma.item.create({
+		data: {
+			id: '5',
+			name: 'Pizza sauce',
+			categoryId: '5',
+			ownerId: kodyUser.id,
+		},
+	})
+	await prisma.item.create({
+		data: {
+			id: '6',
+			name: 'Grated cheese',
+			categoryId: '3',
+			ownerId: kodyUser.id,
+		},
+	})
+	await prisma.item.create({
+		data: {
+			id: '7',
+			name: 'Pinapple',
+			categoryId: '5',
+			ownerId: kodyUser.id,
+		},
+	})
+	await prisma.item.create({
+		data: {
+			id: '8',
+			name: 'Huggies nappies size 5',
+			categoryId: '6',
+			ownerId: kodyUser.id,
+		},
+	})
+	console.timeEnd('Created items')
+
+	console.time('Created meals')
+	await prisma.meal.create({
+		data: {
+			id: '1',
+			name: 'Friday night pizza',
+			ownerId: kodyUser.id,
+		},
+	})
+	console.timeEnd('Created meals')
+
+	console.time('Created meal items')
+	await prisma.mealItem.create({
+		data: {
+			itemId: '1',
+			ownerId: kodyUser.id,
+			mealId: '1',
+			quantity: '500g',
+		},
+	})
+	await prisma.mealItem.create({
+		data: {
+			itemId: '2',
+			ownerId: kodyUser.id,
+			mealId: '1',
+			quantity: '2',
+		},
+	})
+	await prisma.mealItem.create({
+		data: {
+			itemId: '3',
+			ownerId: kodyUser.id,
+			mealId: '1',
+			quantity: '1',
+		},
+	})
+	await prisma.mealItem.create({
+		data: {
+			itemId: '4',
+			ownerId: kodyUser.id,
+			mealId: '1',
+			quantity: '1',
+		},
+	})
+	await prisma.mealItem.create({
+		data: {
+			itemId: '5',
+			ownerId: kodyUser.id,
+			mealId: '1',
+			quantity: '1',
+		},
+	})
+	await prisma.mealItem.create({
+		data: {
+			itemId: '6',
+			ownerId: kodyUser.id,
+			mealId: '1',
+			quantity: '1',
+		},
+	})
+	await prisma.mealItem.create({
+		data: {
+			itemId: '7',
+			ownerId: kodyUser.id,
+			mealId: '1',
+			quantity: '1',
+		},
+	})
+	console.timeEnd('Created meal items')
+
+	console.time('Created frequent items')
+	await prisma.frequentItem.create({
+		data: {
+			itemId: '7',
+			ownerId: kodyUser.id,
+			quantity: '1 box',
+		},
+	})
+	console.timeEnd('Created frequent items')
 
 	console.timeEnd(`🌱 Database has been seeded`)
 }
