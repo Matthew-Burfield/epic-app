@@ -10,6 +10,12 @@ import { useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { requireUserId } from '#app/utils/auth.server.js'
 import { prisma } from '#app/utils/db.server.js'
+import {
+	Card,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '#app/components/ui/card'
 
 export const meta: MetaFunction = () => [{ title: 'Grocery list' }]
 
@@ -150,7 +156,7 @@ export default function Index() {
 				<div className="flex max-w-md flex-col gap-5 xl:order-2 xl:items-start xl:text-left">
 					<h1
 						data-heading
-						className="font-poppins animate-slide-top text-center text-2xl font-bold text-foreground [animation-delay:0.3s] [animation-fill-mode:backwards] hover:text-accent md:text-5xl xl:mt-4 xl:animate-slide-left xl:text-6xl xl:[animation-delay:0.8s] xl:[animation-fill-mode:backwards]"
+						className="font-poppins animate-slide-top xl:animate-slide-left text-center text-2xl font-bold text-foreground [animation-delay:0.3s] [animation-fill-mode:backwards] hover:text-accent md:text-5xl xl:mt-4 xl:text-6xl xl:[animation-delay:0.8s] xl:[animation-fill-mode:backwards]"
 					>
 						Grocery list
 					</h1>
@@ -202,10 +208,12 @@ function CategoryTitle({ name }: { name: string }) {
 
 function Item({ name, quantity }: { name: string; quantity: string }) {
 	return (
-		<div>
-			<div>{name}</div>
-			<div>{quantity}</div>
-		</div>
+		<Card>
+			<CardHeader>
+				<CardTitle>{name}</CardTitle>
+				<CardDescription>{quantity}</CardDescription>
+			</CardHeader>
+		</Card>
 	)
 }
 
