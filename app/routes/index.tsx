@@ -6,7 +6,7 @@ import {
 	type MetaFunction,
 } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
-import { useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 import { z } from 'zod'
 import {
 	Card,
@@ -17,6 +17,8 @@ import {
 import { Checkbox } from '#app/components/ui/checkbox.js'
 import { requireUserId } from '#app/utils/auth.server.js'
 import { prisma } from '#app/utils/db.server.js'
+import { Icon } from '#app/components/ui/icon.js'
+import { cn } from '#app/utils/misc.js'
 
 export const meta: MetaFunction = () => [{ title: 'Grocery list' }]
 
@@ -159,6 +161,11 @@ export default function Index() {
 			>
 				Grocery list
 			</h1>
+			<SortTypeSelector>
+				<Pill isActive>By category</Pill>
+				<Pill>Alphabetical</Pill>
+				<Pill>By Meal</Pill>
+			</SortTypeSelector>
 			{sortedGroceryList.length === 0 ? (
 				<div className="bg-secondary-foreground p-10 text-center">
 					<p className="pb-3 text-secondary">Your grocery list is empty</p>
@@ -171,16 +178,20 @@ export default function Index() {
 					{categories.map(category => {
 						const items = mappedGroceryList[category.id]
 						return (
-							<>
-								<CategoryTitle key={category.id} name={category.name} />
-								{items.map(item => (
-									<Item
-										key={item.id}
-										name={item.name}
-										quantity={item.quantity}
-									/>
-								))}
-							</>
+							<Fragment key={category.id}>
+								<CategoryTitle name={category.name} />
+								{items.map((item, index) => {
+									const bgColor = index % 2 === 0 ? 'bg-card' : 'bg-background'
+									return (
+										<Item
+											key={item.id}
+											className={bgColor}
+											name={item.name}
+											quantity={item.quantity}
+										/>
+									)
+								})}
+							</Fragment>
 						)
 					})}
 				</div>
@@ -208,16 +219,52 @@ export default function Index() {
 	// )
 }
 
-function CategoryTitle({ name }: { name: string }) {
-	return <h2>{name}</h2>
+function SortTypeSelector({ children }: { children: React.ReactNode }) {
+	return <div className="flex px-10 py-2">{children}</div>
 }
 
-function Item({ name, quantity }: { name: string; quantity: string }) {
+function Pill({
+	isActive = false,
+	children,
+}: {
+	isActive?: boolean
+	children: React.ReactNode
+}) {
 	return (
-		<Card>
+		<button
+			className={cn(
+				'align-center flex h-10 items-center gap-2 rounded p-4 font-semibold text-foreground',
+				isActive ? 'bg-tab-background-active' : 'bg-tab-background',
+			)}
+		>
+			{children}
+		</button>
+	)
+}
+
+function CategoryTitle({ name }: { name: string }) {
+	return (
+		<h2 className="px-6 py-3 font-bold text-primary">
+			<Icon name="arrow-right" /> {name}
+		</h2>
+	)
+}
+
+function Item({
+	className,
+	name,
+	quantity,
+}: {
+	className: string
+	name: string
+	quantity: string
+}) {
+	return (
+		<Card className={className}>
 			<CardHeader>
 				<div className="flex items-center">
-					<div className="flex flex-1 flex-col">
+					<img src="https://via.placeholder.com/50" alt="" />
+					<div className="flex flex-1 flex-col pl-2">
 						<CardTitle>{name}</CardTitle>
 						<CardDescription>{quantity}</CardDescription>
 					</div>
