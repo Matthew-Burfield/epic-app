@@ -1,21 +1,22 @@
 import { parseWithZod } from '@conform-to/zod'
 import {
-	type LoaderFunctionArgs,
 	json,
 	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
 	type MetaFunction,
 } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
-import { requireUserId } from '#app/utils/auth.server.js'
-import { prisma } from '#app/utils/db.server.js'
 import {
 	Card,
 	CardDescription,
 	CardHeader,
 	CardTitle,
 } from '#app/components/ui/card'
+import { Checkbox } from '#app/components/ui/checkbox.js'
+import { requireUserId } from '#app/utils/auth.server.js'
+import { prisma } from '#app/utils/db.server.js'
 
 export const meta: MetaFunction = () => [{ title: 'Grocery list' }]
 
@@ -151,55 +152,60 @@ export default function Index() {
 	)
 
 	return (
-		<main className="font-poppins grid h-full">
-			<div className="grid px-4 xl:grid-cols-2 xl:gap-24">
-				<div className="flex max-w-md flex-col gap-5 xl:order-2 xl:items-start xl:text-left">
-					<h1
-						data-heading
-						className="font-poppins animate-slide-top xl:animate-slide-left text-center text-2xl font-bold text-foreground [animation-delay:0.3s] [animation-fill-mode:backwards] hover:text-accent md:text-5xl xl:mt-4 xl:text-6xl xl:[animation-delay:0.8s] xl:[animation-fill-mode:backwards]"
-					>
-						Grocery list
-					</h1>
-					<fetcher.Form ref={formRef} method="post">
-						<li
-							className={`flex items-center justify-between border-b border-accent p-3`}
-						>
-							<input type="text" name="name" placeholder="Add an item" />
-							<button name="_action" value="add" disabled={isSubmitting}>
-								Add
-							</button>
-						</li>
-					</fetcher.Form>
-					{sortedGroceryList.length === 0 ? (
-						<div className="bg-secondary-foreground p-10 text-center">
-							<p className="pb-3 text-secondary">Your grocery list is empty</p>
-							<p className="text-secondary">
-								Click the button below to add items to your list
-							</p>
-						</div>
-					) : (
-						<div>
-							{categories.map(category => {
-								const items = mappedGroceryList[category.id]
-								return (
-									<>
-										<CategoryTitle key={category.id} name={category.name} />
-										{items.map(item => (
-											<Item
-												key={item.id}
-												name={item.name}
-												quantity={item.quantity}
-											/>
-										))}
-									</>
-								)
-							})}
-						</div>
-					)}
+		<main>
+			<h1
+				data-heading
+				className="font-poppins animate-slide-top xl:animate-slide-left text-center text-2xl font-bold text-foreground [animation-delay:0.3s] [animation-fill-mode:backwards] hover:text-accent md:text-5xl xl:mt-4 xl:text-6xl xl:[animation-delay:0.8s] xl:[animation-fill-mode:backwards]"
+			>
+				Grocery list
+			</h1>
+			{sortedGroceryList.length === 0 ? (
+				<div className="bg-secondary-foreground p-10 text-center">
+					<p className="pb-3 text-secondary">Your grocery list is empty</p>
+					<p className="text-secondary">
+						Click the button below to add items to your list
+					</p>
 				</div>
-			</div>
+			) : (
+				<div>
+					{categories.map(category => {
+						const items = mappedGroceryList[category.id]
+						return (
+							<>
+								<CategoryTitle key={category.id} name={category.name} />
+								{items.map(item => (
+									<Item
+										key={item.id}
+										name={item.name}
+										quantity={item.quantity}
+									/>
+								))}
+							</>
+						)
+					})}
+				</div>
+			)}
 		</main>
 	)
+
+	// return (
+	// 	<main className="font-poppins grid h-full">
+	// 		<div className="grid px-4 xl:grid-cols-2 xl:gap-24">
+	// 			<div className="flex max-w-md flex-col gap-5 xl:order-2 xl:items-start xl:text-left">
+	// 				<fetcher.Form ref={formRef} method="post">
+	// 					<li
+	// 						className={`flex items-center justify-between border-b border-accent p-3`}
+	// 					>
+	// 						<input type="text" name="name" placeholder="Add an item" />
+	// 						<button name="_action" value="add" disabled={isSubmitting}>
+	// 							Add
+	// 						</button>
+	// 					</li>
+	// 				</fetcher.Form>
+	// 			</div>
+	// 		</div>
+	// 	</main>
+	// )
 }
 
 function CategoryTitle({ name }: { name: string }) {
@@ -210,40 +216,45 @@ function Item({ name, quantity }: { name: string; quantity: string }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>{name}</CardTitle>
-				<CardDescription>{quantity}</CardDescription>
+				<div className="flex items-center">
+					<div className="flex flex-1 flex-col">
+						<CardTitle>{name}</CardTitle>
+						<CardDescription>{quantity}</CardDescription>
+					</div>
+					<Checkbox />
+				</div>
 			</CardHeader>
 		</Card>
 	)
 }
 
-function ListItem({
-	id,
-	name,
-	checked,
-}: {
-	id: string
-	name: string
-	checked: boolean
-}) {
-	const fetcher = useFetcher()
-	return (
-		<fetcher.Form method="post">
-			<input type="hidden" name="id" value={id} />
-			<li
-				className={`flex items-center justify-between border-b border-accent p-3`}
-			>
-				<span className={`${checked ? 'line-through' : ''}`}>{name}</span>
-				{checked ? (
-					<button type="submit" name="_action" value="undo">
-						undo
-					</button>
-				) : (
-					<button type="submit" name="_action" value="delete">
-						X
-					</button>
-				)}
-			</li>
-		</fetcher.Form>
-	)
-}
+// function ListItem({
+// 	id,
+// 	name,
+// 	checked,
+// }: {
+// 	id: string
+// 	name: string
+// 	checked: boolean
+// }) {
+// 	const fetcher = useFetcher()
+// 	return (
+// 		<fetcher.Form method="post">
+// 			<input type="hidden" name="id" value={id} />
+// 			<li
+// 				className={`flex items-center justify-between border-b border-accent p-3`}
+// 			>
+// 				<span className={`${checked ? 'line-through' : ''}`}>{name}</span>
+// 				{checked ? (
+// 					<button type="submit" name="_action" value="undo">
+// 						undo
+// 					</button>
+// 				) : (
+// 					<button type="submit" name="_action" value="delete">
+// 						X
+// 					</button>
+// 				)}
+// 			</li>
+// 		</fetcher.Form>
+// 	)
+// }
