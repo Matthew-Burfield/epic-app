@@ -365,84 +365,137 @@ async function seed() {
 	await prisma.mealItem.create({
 		data: {
 			id: '1',
-			ownerId: kodyUser.id,
 			mealId: '1',
-			quantity: '500g',
-			name: 'Mince',
-			categoryId: '2',
-			checked: false,
+			itemId: '1',
 		},
 	})
 	await prisma.mealItem.create({
 		data: {
-			ownerId: kodyUser.id,
+			id: '2',
 			mealId: '1',
-			quantity: '2',
-			name: 'Pizza base',
-			categoryId: '4',
-			checked: false,
+			itemId: '2',
 		},
 	})
 	await prisma.mealItem.create({
 		data: {
-			ownerId: kodyUser.id,
+			id: '3',
 			mealId: '1',
-			quantity: '1',
-			name: 'Capsicum',
-			categoryId: '1',
-			checked: false,
+			itemId: '3',
 		},
 	})
 	await prisma.mealItem.create({
 		data: {
-			ownerId: kodyUser.id,
+			id: '4',
 			mealId: '1',
-			quantity: '1',
-			name: 'Zucchini',
-			categoryId: '1',
-			checked: false,
+			itemId: '4',
 		},
 	})
 	await prisma.mealItem.create({
 		data: {
-			ownerId: kodyUser.id,
+			id: '5',
 			mealId: '1',
-			quantity: '1',
-			name: 'Pizza sauce',
-			categoryId: '5',
-			checked: false,
+			itemId: '5',
 		},
 	})
 	await prisma.mealItem.create({
 		data: {
-			ownerId: kodyUser.id,
+			id: '6',
 			mealId: '1',
-			quantity: '1',
-			name: 'Grated cheese',
-			categoryId: '3',
-			checked: false,
+			itemId: '6',
 		},
 	})
 	await prisma.mealItem.create({
 		data: {
-			ownerId: kodyUser.id,
+			id: '7',
 			mealId: '1',
-			quantity: '1',
-			name: 'Pinapple',
-			categoryId: '5',
-			checked: false,
+			itemId: '7',
 		},
 	})
 	console.timeEnd('Created meal items')
+
+	console.time('Created lists')
+	await prisma.list.create({
+		data: {
+			id: '1',
+			ownerId: kodyUser.id,
+			name: 'Shopping list',
+		},
+	})
+	console.timeEnd('Created lists')
+
+	console.time('Created list meal items')
+	await prisma.listMealItem.create({
+		data: {
+			id: '1',
+			listId: '1',
+			mealItemId: '1',
+			quantity: '500g',
+			checked: false,
+		},
+	})
+	await prisma.listMealItem.create({
+		data: {
+			id: '2',
+			listId: '1',
+			mealItemId: '2',
+			quantity: '2',
+			checked: false,
+		},
+	})
+	await prisma.listMealItem.create({
+		data: {
+			id: '3',
+			listId: '1',
+			mealItemId: '3',
+			quantity: '1',
+			checked: false,
+		},
+	})
+	await prisma.listMealItem.create({
+		data: {
+			id: '4',
+			listId: '1',
+			mealItemId: '4',
+			quantity: '1',
+			checked: false,
+		},
+	})
+	await prisma.listMealItem.create({
+		data: {
+			id: '5',
+			listId: '1',
+			mealItemId: '5',
+			quantity: '1',
+			checked: false,
+		},
+	})
+	await prisma.listMealItem.create({
+		data: {
+			id: '6',
+			listId: '1',
+			mealItemId: '6',
+			quantity: '1',
+			checked: false,
+		},
+	})
+	await prisma.listMealItem.create({
+		data: {
+			id: '7',
+			listId: '1',
+			mealItemId: '7',
+			quantity: '1',
+			checked: false,
+		},
+	})
+	console.timeEnd('Created list meal items')
 
 	console.time('Created list items')
 	await prisma.listItem.create({
 		data: {
 			id: '1',
-			ownerId: kodyUser.id,
+			listId: '1',
+			itemId: '8',
 			quantity: '1 box',
-			name: 'Huugies nappies size 5',
-			categoryId: '6',
 			checked: false,
 		},
 	})

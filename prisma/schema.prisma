@@ -25,12 +25,11 @@ model User {
   sessions     Session[]
   connections  Connection[]
   Meal         Meal[]
-  MealItem     MealItem[]
-  ListItem     ListItem[]
+  List         List[]
   Note         Note[]
 }
 
-model ListItem {
+model List {
   id String @id @default(cuid())
 
   createdAt DateTime @default(now())
@@ -39,9 +38,41 @@ model ListItem {
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   ownerId String
 
+  ListItem ListItem[]
+  ListMealItem ListMealItem[]
+
   name       String
+}
+
+model ListMealItem {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listId String
+
+  mealItem  MealItem   @relation(fields: [mealItemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  mealItemId String
+
   quantity String
-  categoryId String
+  checked    Boolean
+}
+
+model ListItem {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listId String
+
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId String
+
+  quantity String
   checked    Boolean
 }
 
@@ -64,16 +95,13 @@ model MealItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  ownerId String
-
   meal   Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   mealId String
 
-  name String
-  categoryId String
-  quantity String
-  checked Boolean
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId String
+
+  ListMealItem ListMealItem[]
 }
 
 model Item {
@@ -86,6 +114,9 @@ model Item {
 
   category     Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   categoryId   String
+
+  MealItem MealItem[]
+  ListItem ListItem[]
 }
 
 model Category {

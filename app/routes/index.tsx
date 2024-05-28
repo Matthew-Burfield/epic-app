@@ -6,7 +6,13 @@ import {
 	type MetaFunction,
 } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
-import { Fragment, useEffect, useRef } from 'react'
+import {
+	type ComponentPropsWithoutRef,
+	Fragment,
+	useEffect,
+	useRef,
+	useState,
+} from 'react'
 import { z } from 'zod'
 import {
 	Card,
@@ -15,9 +21,9 @@ import {
 	CardTitle,
 } from '#app/components/ui/card'
 import { Checkbox } from '#app/components/ui/checkbox.js'
+import { Icon } from '#app/components/ui/icon.js'
 import { requireUserId } from '#app/utils/auth.server.js'
 import { prisma } from '#app/utils/db.server.js'
-import { Icon } from '#app/components/ui/icon.js'
 import { cn } from '#app/utils/misc.js'
 
 export const meta: MetaFunction = () => [{ title: 'Grocery list' }]
@@ -76,23 +82,45 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					name: true,
 				},
 			},
-			MealItem: {
-				select: {
-					id: true,
-					mealId: true,
-					name: true,
-					categoryId: true,
-					quantity: true,
-					checked: true,
-				},
-			},
-			ListItem: {
+			List: {
 				select: {
 					id: true,
 					name: true,
-					categoryId: true,
-					quantity: true,
-					checked: true,
+					ListItem: {
+						select: {
+							id: true,
+							quantity: true,
+							checked: true,
+							item: {
+								select: {
+									name: true,
+									categoryId: true,
+								},
+							},
+						},
+					},
+					ListMealItem: {
+						select: {
+							id: true,
+							quantity: true,
+							checked: true,
+							mealItem: {
+								select: {
+									item: {
+										select: {
+											name: true,
+											categoryId: true,
+										},
+									},
+									meal: {
+										select: {
+											id: true,
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -102,12 +130,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			id: true,
 			name: true,
 			sort: true,
-			Item: {
-				select: {
-					id: true,
-					name: true,
-				},
-			},
 		},
 		orderBy: { sort: 'asc' },
 	})
@@ -119,8 +141,13 @@ export default function Index() {
 	const fetcher = useFetcher<typeof action>()
 	const { user, categories } = useLoaderData<typeof loader>()
 	const formRef = useRef<HTMLFormElement>(null)
+	const [sortStyle, setSortStyle] = useState<
+		'categories' | 'alphabetical' | 'meals'
+	>('categories')
 
 	const isSubmitting = fetcher.state !== 'idle' && !!fetcher.data
+
+	console.log({ user, categories })
 
 	useEffect(() => {
 		if (isSubmitting) {
@@ -132,11 +159,16 @@ export default function Index() {
 		return null
 	}
 
-	type Item = (typeof user.MealItem)[number] | (typeof user.ListItem)[number]
-	const sortedGroceryList = [...user.MealItem, ...user.ListItem].sort(
+	type List = (typeof user.List)[number]
+
+	type Item = List['ListMealItem'][number] | List['ListItem'][number]
+	const list = user.List[0]
+	const sortedGroceryList = [...list.ListMealItem, ...list.ListItem].sort(
 		(a, b) => {
 			const checkedSort = a.checked === b.checked ? 0 : a.checked ? 1 : -1
-			const nameSort = a.name.localeCompare(b.name)
+			const aName = 'item' in a ? a.item.name : a.mealItem.item.name
+			const bName = 'item' in a ? a.item.name : a.mealItem.item.name
+			const nameSort = aName.localeCompare(bName)
 
 			return checkedSort || nameSort
 		},
@@ -144,10 +176,12 @@ export default function Index() {
 
 	const mappedGroceryList = sortedGroceryList.reduce(
 		(acc, item) => {
-			if (!acc[item.categoryId]) {
-				acc[item.categoryId] = []
+			const categoryId =
+				'item' in item ? item.item.categoryId : item.mealItem.item.categoryId
+			if (!acc[categoryId]) {
+				acc[categoryId] = []
 			}
-			acc[item.categoryId].push(item)
+			acc[categoryId].push(item)
 			return acc
 		},
 		{} as Record<string, Item[]>,
@@ -162,9 +196,24 @@ export default function Index() {
 				Grocery list
 			</h1>
 			<SortTypeSelector>
-				<Pill isActive>By category</Pill>
-				<Pill>Alphabetical</Pill>
-				<Pill>By Meal</Pill>
+				<Pill
+					isActive={sortStyle === 'categories'}
+					onClick={() => setSortStyle('categories')}
+				>
+					Categories
+				</Pill>
+				<Pill
+					isActive={sortStyle === 'meals'}
+					onClick={() => setSortStyle('meals')}
+				>
+					Meals
+				</Pill>
+				<Pill
+					isActive={sortStyle === 'alphabetical'}
+					onClick={() => setSortStyle('alphabetical')}
+				>
+					Alphabetical
+				</Pill>
 			</SortTypeSelector>
 			{sortedGroceryList.length === 0 ? (
 				<div className="bg-secondary-foreground p-10 text-center">
@@ -182,11 +231,13 @@ export default function Index() {
 								<CategoryTitle name={category.name} />
 								{items.map((item, index) => {
 									const bgColor = index % 2 === 0 ? 'bg-card' : 'bg-background'
+									const name =
+										'item' in item ? item.item.name : item.mealItem.item.name
 									return (
 										<Item
 											key={item.id}
 											className={bgColor}
-											name={item.name}
+											name={name}
 											quantity={item.quantity}
 										/>
 									)
@@ -225,20 +276,18 @@ function SortTypeSelector({ children }: { children: React.ReactNode }) {
 
 function Pill({
 	isActive = false,
-	children,
+	...props
 }: {
 	isActive?: boolean
-	children: React.ReactNode
-}) {
+} & ComponentPropsWithoutRef<'button'>) {
 	return (
 		<button
 			className={cn(
-				'align-center flex h-10 items-center gap-2 rounded p-4 font-semibold text-foreground',
+				'align-center flex h-10 items-center gap-2 rounded-md p-4 font-semibold text-foreground',
 				isActive ? 'bg-tab-background-active' : 'bg-tab-background',
 			)}
-		>
-			{children}
-		</button>
+			{...props}
+		/>
 	)
 }
 
@@ -260,18 +309,20 @@ function Item({
 	quantity: string
 }) {
 	return (
-		<Card className={className}>
-			<CardHeader>
-				<div className="flex items-center">
-					<img src="https://via.placeholder.com/50" alt="" />
-					<div className="flex flex-1 flex-col pl-2">
-						<CardTitle>{name}</CardTitle>
-						<CardDescription>{quantity}</CardDescription>
+		<label htmlFor={name}>
+			<Card className={className}>
+				<CardHeader>
+					<div className="flex items-center">
+						<img src="https://via.placeholder.com/50" alt="" />
+						<div className="flex flex-1 flex-col pl-2">
+							<CardTitle>{name}</CardTitle>
+							<CardDescription>{quantity}</CardDescription>
+						</div>
+						<Checkbox id={name} />
 					</div>
-					<Checkbox />
-				</div>
-			</CardHeader>
-		</Card>
+				</CardHeader>
+			</Card>
+		</label>
 	)
 }
 
