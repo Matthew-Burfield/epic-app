@@ -94,19 +94,6 @@ jobs:
     name: Metrics
     runs-on: ubuntu-22.04
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Get metrics from previous commit
-        id: old
-        run: |
-          git checkout HEAD^
-          echo "eslint-ignore-count=$(cat other/metrics/eslint-ignore-count.txt)" >> $GITHUB_OUTPUT
-          echo "no-explicity-any-count=$(cat other/metrics/no-explicit-any-count.txt)" >> $GITHUB_OUTPUT
-          echo "any-count=$(cat other/metrics/any-count.txt)" >> $GITHUB_OUTPUT
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -117,52 +104,25 @@ jobs:
           no_explicit_any_count=$(grep -r "@typescript-eslint/no-explicit-any" app | wc -l)
           any_count=$(grep -r ": any" app | wc -l)
           echo "eslint-ignore-count=$eslint_ignore_count" >> $GITHUB_OUTPUT
-          echo "no-explicity-any-count=$no_explicit_any_count" >> $GITHUB_OUTPUT
+          echo "no-explicit-any-count=$no_explicit_any_count" >> $GITHUB_OUTPUT
           echo "any-count=$any_count" >> $GITHUB_OUTPUT
-          echo $eslint_ignore_count > other/metrics/eslint-ignore-count.txt
-          echo $no_explicit_any_count > other/metrics/no-explicit-any-count.txt
-          echo $any_count > other/metrics/any-count.txt
 
-      - name: Calculate percentage change
+      - name: Post to airtable
         run: |
-          old=${{ steps.old.outputs.eslint-ignore-count }}
-          new=${{ steps.new.outputs.eslint-ignore-count }}
-          change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
-          echo "Percentage change in eslint ignoree comments: $change%"
-          old=${{ steps.old.outputs.no-explicity-any-count }}
-          new=${{ steps.new.outputs.no-explicity-any-count }}
-          change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
-          echo "Percentage change in no-explicit-any comments: $change%"
-          old=${{ steps.old.outputs.any-count }}
-          new=${{ steps.new.outputs.any-count }}
-          change=$(echo "scale=2; ($new - $old) / $old * 100" | bc)
-          echo "Percentage change in :any types: $change%"
-
-  annotate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Create check run
-        id: create_check
-        uses: octokit/request-action@v2.x
-        with:
-          route: POST /repos/{owner}/{repo}/check-runs
-          mediaType: '{"previews": ["antiope"]}'
-          name: My check
-          head_sha: ${{ github.event.pull_request.head.sha }}
-          status: completed
-          conclusion: success
-          output:
-            '{"title":"My check","summary":"Summary of the
-            check","annotations":[{"path":"README.md","start_line":1,"end_line":1,"start_column":1,"end_column":1,"annotation_level":"notice","message":"My
-            annotation"}]}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get check run id
-        run: echo "Check run id is ${{ steps.create_check.outputs.data.id }}"
+          curl -X POST "https://api.airtable.com/v0/appEDucGGSS6CjdVQ/tblrT4XPiIOIudxrL" \
+          -H "Authorization: Bearer ${{ secrets.AIRTABLE_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          --data '{
+              "records": [
+                {
+                  "fields": {
+                    "eslint-ignore-count": ${{ steps.new.outputs.eslint-ignore-count }},
+                    "no-explicit-any-count": ${{ steps.new.outputs.no-explicit-any-count }},
+                    "any-count": ${{ steps.new.outputs.any-count }}
+                  }
+                }
+              ]
+            }'
 
         # playwright:
         #   name: 🎭 Playwright
